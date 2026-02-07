@@ -1,0 +1,9 @@
+apiVersion: databases.atlasdb.io/v1alpha1
+kind: PostgresCluster
+metadata:
+  name: pg-test
+spec:
+  instances: 1
+  version: "15"
+  storage:
+    size: 1Gi
