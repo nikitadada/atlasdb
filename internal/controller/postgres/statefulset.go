@@ -4,7 +4,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	dbv1alpha1 "github.com/nikitadada/atlasdb/api/v1alpha1"
 )
@@ -24,7 +24,7 @@ func BuildStatefulSet(
 			Labels:    labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas: pointer.Int32(cluster.Spec.Instances),
+			Replicas: ptr.To(cluster.Spec.Instances),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
