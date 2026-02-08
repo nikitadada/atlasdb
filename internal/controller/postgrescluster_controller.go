@@ -2,14 +2,17 @@ package controller
 
 import (
 	"context"
+	databasesv1alpha1 "github.com/nikitadada/atlasdb/api/v1alpha1"
+	"github.com/nikitadada/atlasdb/internal/controller/postgres"
+	appsv1 "k8s.io/api/apps/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	databasesv1alpha1 "github.com/nikitadada/atlasdb/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type PostgresClusterReconciler struct {
@@ -28,6 +31,24 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	pg := &databasesv1alpha1.PostgresCluster{}
 	if err := r.Get(ctx, req.NamespacedName, pg); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	var sts appsv1.StatefulSet
+	err := r.Get(ctx, types.NamespacedName{
+		Name:      pg.Name,
+		Namespace: pg.Namespace,
+	}, &sts)
+
+	if apierrors.IsNotFound(err) {
+		desired := postgres.BuildStatefulSet(pg)
+
+		if err := ctrl.SetControllerReference(pg, desired, r.Scheme); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		if err := r.Create(ctx, desired); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	pg.Status.Phase = "Reconciling"

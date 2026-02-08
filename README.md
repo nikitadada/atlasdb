@@ -38,3 +38,17 @@ AtlasDB — проект Kubernetes-оператора для управлени
 | MongoDB     | 📝 Planned     |
 | ClickHouse  | 📝 Planned     |
 
+## 📊 Observability
+
+Оператор предоставляет следующие endpoints:
+
+- **`/metrics`** — Prometheus metrics
+- **`/healthz`** — liveness probe
+- **`/readyz`** — readiness probe
+
+Также включены:
+
+- leader election (HA-режим)
+- structured logging
+
+Observability рассматривается как неотъемлемая часть архитектуры, а не дополнительная функциональность.
