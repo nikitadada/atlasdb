@@ -33,6 +33,15 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	if err := postgres.EnsureFinalizer(ctx, r.Client, pg); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if !pg.ObjectMeta.DeletionTimestamp.IsZero() {
+		// объект удаляется, дальше reconcile не нужен
+		return ctrl.Result{}, nil
+	}
+
 	var sts appsv1.StatefulSet
 	err := r.Get(ctx, types.NamespacedName{
 		Name:      pg.Name,
