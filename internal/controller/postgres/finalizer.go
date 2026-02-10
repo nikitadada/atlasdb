@@ -15,7 +15,7 @@ func EnsureFinalizer(
 	c client.Client,
 	pg *dbv1alpha1.PostgresCluster,
 ) error {
-	if pg.ObjectMeta.DeletionTimestamp.IsZero() {
+	if pg.DeletionTimestamp.IsZero() {
 		// объект НЕ удаляется
 		if !controllerutil.ContainsFinalizer(pg, PostgresFinalizer) {
 			controllerutil.AddFinalizer(pg, PostgresFinalizer)

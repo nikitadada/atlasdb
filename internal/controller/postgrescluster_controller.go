@@ -37,7 +37,7 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	if !pg.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !pg.DeletionTimestamp.IsZero() {
 		// объект удаляется, дальше reconcile не нужен
 		return ctrl.Result{}, nil
 	}
