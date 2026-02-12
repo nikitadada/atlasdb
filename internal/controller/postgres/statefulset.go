@@ -14,9 +14,7 @@ func BuildStatefulSet(
 	cluster *dbv1alpha1.PostgresCluster,
 ) *appsv1.StatefulSet {
 
-	labels := map[string]string{
-		"app": cluster.Name,
-	}
+	labels := Labels(cluster.Name)
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -41,6 +39,12 @@ func BuildStatefulSet(
 							Image: "postgres:15",
 							Ports: []corev1.ContainerPort{
 								{ContainerPort: 5432},
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "POSTGRES_PASSWORD",
+									Value: "postgres", // пока можно хардкод, позже Secret
+								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
