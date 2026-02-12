@@ -20,6 +20,7 @@ type PostgresClusterStatus struct {
 	// +listType=map
 	// +listMapKey=type
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	Endpoint   string             `json:"endpoint,omitempty"`
 }
 
 // +kubebuilder:object:root=true

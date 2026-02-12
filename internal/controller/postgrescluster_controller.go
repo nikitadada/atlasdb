@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	databasesv1alpha1 "github.com/nikitadada/atlasdb/api/v1alpha1"
@@ -97,6 +98,34 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
+	// ---------------- CLIENT SERVICE ENSURE ----------------
+
+	clientSvcName := pg.Name + "-rw"
+
+	clientSvc := &corev1.Service{}
+	err = r.Get(ctx, types.NamespacedName{
+		Name:      clientSvcName,
+		Namespace: pg.Namespace,
+	}, clientSvc)
+
+	if apierrors.IsNotFound(err) {
+		desired := postgres.BuildClientService(pg)
+
+		if err := ctrl.SetControllerReference(pg, desired, r.Scheme); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		logger.Info("Creating client service")
+
+		if err := r.Create(ctx, desired); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{RequeueAfter: 2 * time.Second}, nil
+	} else if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// ---------------- READINESS CHECK ----------------
 
 	if sts.Status.ReadyReplicas != *sts.Spec.Replicas {
@@ -134,6 +163,11 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	})
 
 	pg.Status.Phase = "Ready"
+	pg.Status.Endpoint = fmt.Sprintf(
+		"%s.%s.svc.cluster.local:5432",
+		clientSvcName,
+		pg.Namespace,
+	)
 
 	if err := r.Status().Update(ctx, pg); err != nil {
 		return ctrl.Result{}, err

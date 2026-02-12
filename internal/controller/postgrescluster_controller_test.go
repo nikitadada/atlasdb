@@ -51,7 +51,13 @@ var _ = Describe("PostgresCluster Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: databasesv1alpha1.PostgresClusterSpec{
+						Instances: 1,
+						Version:   "15",
+						Storage: databasesv1alpha1.StorageSpec{
+							Size: "1Gi",
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}

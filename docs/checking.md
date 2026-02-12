@@ -32,3 +32,17 @@ kubectl run dns-debug \
 ```
 
 После запуска можно выполнять DNS-проверки внутри pod (например `nslookup`, `ping` и т.д.).
+
+Проверка готовности postgres
+```bash
+kubectl exec -it pg-test-0 -- pg_isready
+```
+
+Подключение к postgres
+```bash
+kubectl run psql \
+  --image=postgres:15 \
+  -it --rm --restart=Never \
+  --env="PGPASSWORD=postgres" -- \
+  psql -h pg-test-rw -U postgres
+```
