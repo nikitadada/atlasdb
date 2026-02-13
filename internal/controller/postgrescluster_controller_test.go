@@ -59,7 +59,7 @@ var _ = Describe("PostgresCluster Controller", func() {
 						},
 						SuperuserSecretName: "postgres",
 						DatabaseName:        "postgres",
-						AppUser: "postgres",
+						AppUser:             "postgres",
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
