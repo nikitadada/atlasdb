@@ -13,7 +13,6 @@ import (
 func BuildStatefulSet(
 	cluster *dbv1alpha1.PostgresCluster,
 ) *appsv1.StatefulSet {
-
 	labels := Labels(cluster.Name)
 
 	return &appsv1.StatefulSet{
@@ -42,8 +41,15 @@ func BuildStatefulSet(
 							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  "POSTGRES_PASSWORD",
-									Value: "postgres", // пока можно хардкод, позже Secret
+									Name: "POSTGRES_PASSWORD",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: cluster.Spec.SuperuserSecretName,
+											},
+											Key: "password",
+										},
+									},
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{

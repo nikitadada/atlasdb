@@ -37,6 +37,10 @@ spec:
             type: object
           spec:
             properties:
+              appUser:
+                type: string
+              databaseName:
+                type: string
               instances:
                 format: int32
                 type: integer
@@ -47,11 +51,15 @@ spec:
                 required:
                 - size
                 type: object
+              superuserSecretName:
+                minLength: 1
+                type: string
               version:
                 type: string
             required:
             - instances
             - storage
+            - superuserSecretName
             - version
             type: object
           status:
@@ -115,6 +123,8 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              connectionSecret:
+                type: string
               endpoint:
                 type: string
               phase:

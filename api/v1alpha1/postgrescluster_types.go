@@ -8,6 +8,10 @@ type PostgresClusterSpec struct {
 	Instances int32       `json:"instances"`
 	Version   string      `json:"version"`
 	Storage   StorageSpec `json:"storage"`
+	// +kubebuilder:validation:MinLength=1
+	SuperuserSecretName string `json:"superuserSecretName"`
+	DatabaseName        string `json:"databaseName,omitempty"`
+	AppUser             string `json:"appUser,omitempty"`
 }
 
 type StorageSpec struct {
@@ -19,8 +23,9 @@ type PostgresClusterStatus struct {
 
 	// +listType=map
 	// +listMapKey=type
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
-	Endpoint   string             `json:"endpoint,omitempty"`
+	Conditions       []metav1.Condition `json:"conditions,omitempty"`
+	Endpoint         string             `json:"endpoint,omitempty"`
+	ConnectionSecret string             `json:"connectionSecret,omitempty"`
 }
 
 // +kubebuilder:object:root=true

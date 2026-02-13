@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -46,10 +47,15 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
+	creds, err := postgres.ReconcileCredentials(ctx, r.Client, r.Scheme, pg)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// ---------------- STATEFULSET ENSURE ----------------
 
 	sts := &appsv1.StatefulSet{}
-	err := r.Get(ctx, types.NamespacedName{
+	err = r.Get(ctx, types.NamespacedName{
 		Name:      pg.Name,
 		Namespace: pg.Namespace,
 	}, sts)
@@ -98,6 +104,11 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
+	err = postgres.ReconcileConnectionSecret(ctx, r.Client, r.Scheme, pg, creds)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// ---------------- CLIENT SERVICE ENSURE ----------------
 
 	clientSvcName := pg.Name + "-rw"
@@ -124,6 +135,63 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{RequeueAfter: 2 * time.Second}, nil
 	} else if err != nil {
 		return ctrl.Result{}, err
+	}
+
+	// =========================
+	// CREATE CONNECTION SECRET
+	// =========================
+
+	password, err := postgres.GetPostgresPassword(
+		ctx,
+		r.Client,
+		pg.Namespace,
+		pg.Spec.SuperuserSecretName,
+	)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	host := pg.Name + "-rw"
+
+	connSecret := BuildConnectionSecret(
+		pg.Name,
+		pg.Namespace,
+		host,
+		password,
+	)
+
+	// set owner reference
+	if err := controllerutil.SetControllerReference(
+		pg,
+		connSecret,
+		r.Scheme,
+	); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	existing := &corev1.Secret{}
+	err = r.Client.Get(
+		ctx,
+		client.ObjectKey{
+			Name:      connSecret.Name,
+			Namespace: connSecret.Namespace,
+		},
+		existing,
+	)
+
+	if err != nil && apierrors.IsNotFound(err) {
+		err = r.Client.Create(ctx, connSecret)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	if pg.Status.ConnectionSecret != connSecret.Name {
+		pg.Status.ConnectionSecret = connSecret.Name
+		err = r.Status().Update(ctx, pg)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	// ---------------- READINESS CHECK ----------------
