@@ -12,6 +12,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const PostgresCaption = "postgres"
+
 func BuildConnectionSecret(
 	clusterName string,
 	namespace string,
@@ -19,8 +21,8 @@ func BuildConnectionSecret(
 	password string,
 ) *corev1.Secret {
 	port := "5432"
-	username := "postgres"
-	database := "postgres"
+	username := PostgresCaption
+	database := PostgresCaption
 
 	uri := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
@@ -87,8 +89,8 @@ func ReconcileConnectionSecret(
 	name := pg.Name + "-connection"
 
 	password := string(creds.Data["password"])
-	username := "postgres"
-	db := "postgres"
+	username := PostgresCaption
+	db := PostgresCaption
 	host := pg.Name + "-rw"
 	port := "5432"
 

@@ -170,7 +170,7 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	existing := &corev1.Secret{}
-	err = r.Client.Get(
+	err = r.Get(
 		ctx,
 		client.ObjectKey{
 			Name:      connSecret.Name,
@@ -180,7 +180,7 @@ func (r *PostgresClusterReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	)
 
 	if err != nil && apierrors.IsNotFound(err) {
-		err = r.Client.Create(ctx, connSecret)
+		err = r.Create(ctx, connSecret)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
