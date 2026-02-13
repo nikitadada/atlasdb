@@ -57,6 +57,9 @@ var _ = Describe("PostgresCluster Controller", func() {
 						Storage: databasesv1alpha1.StorageSpec{
 							Size: "1Gi",
 						},
+						SuperuserSecretName: "postgres",
+						DatabaseName:        "postgres",
+						AppUser: "postgres",
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
